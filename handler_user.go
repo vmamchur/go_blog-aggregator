@@ -1,20 +1,55 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/vmamchur/go_blog-aggregator/internal/database"
 )
 
 func handlerLogin(s *state, cmd command) error {
 	if len(cmd.Args) != 1 {
 		return fmt.Errorf("Usage: %s <name>", cmd.Name)
 	}
-	username := cmd.Args[0]
+	name := cmd.Args[0]
 
-	err := s.cfg.SetUser(username)
+    _, err := s.db.GetUser(context.Background(), name)
+    if err != nil {
+        return fmt.Errorf("Couldn't find user: %w", err)
+    }
+
+	err = s.cfg.SetUser(name)
 	if err != nil {
 		return fmt.Errorf("Couldn't set current user: %w", err)
 	}
 
-	fmt.Printf("User %s switched successfully\n", username)
+	fmt.Printf("User %s switched successfully\n", name)
 	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("Usage: %s <name>", cmd.Name)
+	}
+	name := cmd.Args[0]
+
+	user, err := s.db.CreateUser(context.Background(), database.CreateUserParams{ID: uuid.New(), CreatedAt: time.Now(), UpdatedAt: time.Now(), Name: name})
+	if err != nil {
+        return fmt.Errorf("Couldn't create user: %w", err)
+	}
+	err = s.cfg.SetUser(name)
+    if err != nil {
+        return fmt.Errorf("Couldn't set current user: %w", err)
+    }
+
+    fmt.Println("User created successfully:")
+    printUser(user)
+	return nil
+}
+
+func printUser(user database.User) {
+    fmt.Printf(" * ID:    %v\n", user.ID)
+    fmt.Printf(" * Name:  %v\n", user.Name)
 }

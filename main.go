@@ -1,13 +1,17 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/vmamchur/go_blog-aggregator/internal/config"
+	"github.com/vmamchur/go_blog-aggregator/internal/database"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
@@ -17,12 +21,16 @@ func main() {
 		log.Fatalf("Error reading config: %v", err)
 	}
 
-	stateInstance := &state{cfg: &cfg}
+	db, err := sql.Open("postgres", cfg.DbURL)
+	dbQueries := database.New(db)
+
+    stateInstance := &state{db: dbQueries, cfg: &cfg}
 
 	cmds := commands{
 		handlers: make(map[string]func(*state, command) error),
 	}
 	cmds.register("login", handlerLogin)
+    cmds.register("register", handlerRegister)
 
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: cli <command> [args...]")
