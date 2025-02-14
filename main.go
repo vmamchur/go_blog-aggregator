@@ -24,13 +24,14 @@ func main() {
 	db, err := sql.Open("postgres", cfg.DbURL)
 	dbQueries := database.New(db)
 
-    stateInstance := &state{db: dbQueries, cfg: &cfg}
+	stateInstance := &state{db: dbQueries, cfg: &cfg}
 
 	cmds := commands{
 		handlers: make(map[string]func(*state, command) error),
 	}
 	cmds.register("login", handlerLogin)
-    cmds.register("register", handlerRegister)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
 
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: cli <command> [args...]")
