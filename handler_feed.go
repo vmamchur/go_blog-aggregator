@@ -9,21 +9,16 @@ import (
 	"github.com/vmamchur/go_blog-aggregator/internal/database"
 )
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("Usage: %s <name> <url>", cmd.Name)
 	}
 	name := cmd.Args[0]
 	url := cmd.Args[1]
 
-	currentUser, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
-	}
-
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID:        uuid.New(),
-		UserID:    currentUser.ID,
+		UserID:    user.ID,
 		Name:      name,
 		Url:       url,
 		CreatedAt: time.Now(),
@@ -33,9 +28,22 @@ func handlerAddFeed(s *state, cmd command) error {
 		return fmt.Errorf("Couldn't create feed: %w", err)
 	}
 
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		FeedID:    feed.ID,
+		UserID:    user.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("Couldn't create feed follow: %w", err)
+	}
+
 	fmt.Println("Feed created successfully:")
-	printFeed(feed, currentUser)
+	printFeed(feed, user)
 	fmt.Println()
+	fmt.Println("Feed followed successfully:")
+	printFeedFollow(feedFollow)
 	fmt.Println("=====================================")
 
 	return nil
@@ -70,5 +78,5 @@ func printFeed(feed database.Feed, user database.User) {
 	fmt.Printf("* ID:    	 %v\n", feed.ID)
 	fmt.Printf("* Name:  	 %v\n", feed.Name)
 	fmt.Printf("* Url:   	 %v\n", feed.Url)
-	fmt.Printf("* User:      %v\n", user.Name)
+	fmt.Printf("* User:  	 %v\n", user.Name)
 }
