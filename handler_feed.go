@@ -46,19 +46,19 @@ func handlerListFeeds(s *state, cmd command) error {
 	if err != nil {
 		return fmt.Errorf("Couldn't list feeds: %w", err)
 	}
-	
+
 	if len(feeds) == 0 {
 		fmt.Println("No feeds found")
 		return nil
 	}
-	
+
 	fmt.Printf("Found %d feeds:\n", len(feeds))
 	for _, feed := range feeds {
 		user, err := s.db.GetUserById(context.Background(), feed.UserID)
 		if err != nil {
 			return fmt.Errorf("Couldn't get user: %w", err)
 		}
-		
+
 		printFeed(feed, user)
 		fmt.Println("=====================================")
 	}
