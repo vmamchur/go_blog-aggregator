@@ -35,7 +35,6 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", "gator")
-
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
